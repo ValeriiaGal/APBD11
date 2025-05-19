@@ -44,8 +44,9 @@ app.MapGet("/api/devices/{id}", async (int id, DeviceContext db) =>
     var device = await db.Devices
         .Include(d => d.DeviceType)
         .Include(d => d.DeviceEmployees)
-            .ThenInclude(de => de.Employee)
-                .ThenInclude(e => e.Person)
+        .ThenInclude(de => de.Employee)
+        .ThenInclude(e => e.Person).Include(device => device.DeviceEmployees)
+        .ThenInclude(deviceEmployee => deviceEmployee.Employee).ThenInclude(employee => employee.Person)
         .FirstOrDefaultAsync(d => d.Id == id);
 
     if (device == null)
@@ -117,14 +118,22 @@ app.MapPut("/api/devices/{id}", async (int id, DeviceContext db, CreateUpdateDev
 // DELETE: /api/devices/{id}
 app.MapDelete("/api/devices/{id}", async (int id, DeviceContext db) =>
 {
-    var device = await db.Devices.FindAsync(id);
+    var device = await db.Devices
+        .Include(d => d.DeviceEmployees)
+        .FirstOrDefaultAsync(d => d.Id == id);
+
     if (device == null)
         return Results.NotFound("Device not found.");
 
+    if (device.DeviceEmployees.Any())
+        return Results.BadRequest("Cannot delete device. It is currently assigned to employees.");
+
     db.Devices.Remove(device);
     await db.SaveChangesAsync();
+
     return Results.NoContent();
 });
+
 
 
 // GET: /api/employees
