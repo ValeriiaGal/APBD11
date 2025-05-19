@@ -162,6 +162,7 @@ app.MapGet("/api/employees/{id}", async (int id, DeviceContext db) =>
 
     if (employee == null)
         return Results.NotFound("Employee not found.");
+    
 
     var dto = new EmployeeDetailsDto
     {
