@@ -2,7 +2,7 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "src\API\API.csproj", "{25802B31-619E-412F-BFFA-A397B5F66106}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DTOs", "DTOs\DTOs.csproj", "{CCB095FA-4CCC-4B0F-8E17-7A650270163C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DTOs", "src\DTOs\DTOs.csproj", "{CCB095FA-4CCC-4B0F-8E17-7A650270163C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

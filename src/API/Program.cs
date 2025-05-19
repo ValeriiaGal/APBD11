@@ -114,6 +114,7 @@ app.MapPut("/api/devices/{id}", async (int id, DeviceContext db, CreateUpdateDev
     return Results.NoContent();
 });
 
+// DELETE: /api/devices/{id}
 app.MapDelete("/api/devices/{id}", async (int id, DeviceContext db) =>
 {
     var device = await db.Devices.FindAsync(id);
@@ -123,6 +124,53 @@ app.MapDelete("/api/devices/{id}", async (int id, DeviceContext db) =>
     db.Devices.Remove(device);
     await db.SaveChangesAsync();
     return Results.NoContent();
+});
+
+
+// GET: /api/employees
+app.MapGet("/api/employees", async (DeviceContext db) =>
+{
+    var employees = await db.Employees
+        .Include(e => e.Person)
+        .Select(e => new EmployeeDto
+        {
+            Id = e.Id,
+            FullName = $"{e.Person.FirstName} {e.Person.LastName}"
+        })
+        .ToListAsync();
+
+    return Results.Ok(employees);
+});
+
+// GET: /api/employees/{id}
+app.MapGet("/api/employees/{id}", async (int id, DeviceContext db) =>
+{
+    var employee = await db.Employees
+        .Include(e => e.Person)
+        .Include(e => e.Position)
+        .FirstOrDefaultAsync(e => e.Id == id);
+
+    if (employee == null)
+        return Results.NotFound("Employee not found.");
+
+    var dto = new EmployeeDetailsDto
+    {
+        PassportNumber = employee.Person.PassportNumber,
+        FirstName = employee.Person.FirstName,
+        MiddleName = employee.Person.MiddleName,
+        LastName = employee.Person.LastName,
+        PhoneNumber = employee.Person.PhoneNumber,
+        Email = employee.Person.Email,
+        Salary = employee.Salary,
+        HireDate = employee.HireDate,
+        Position = new PositionDto
+        {
+            Id = employee.Position.Id,
+            Name = employee.Position.Name
+        }
+    };
+
+    return Results.Ok(dto);
 });
 
 app.Run();
