@@ -153,6 +153,7 @@ app.MapGet("/api/employees", async (DeviceContext db) =>
 
 // GET: /api/employees/{id}
 app.MapGet("/api/employees/{id}", async (int id, DeviceContext db) =>
+
 {
     var employee = await db.Employees
         .Include(e => e.Person)
