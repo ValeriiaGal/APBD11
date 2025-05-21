@@ -30,7 +30,7 @@ public partial class DeviceContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasDefaultSchema("s30854");
+      //  modelBuilder.HasDefaultSchema("s30854");
 
         modelBuilder.Entity<Device>(entity =>
         {

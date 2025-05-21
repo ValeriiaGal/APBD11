@@ -1,6 +1,7 @@
 using API;
 using DTOs;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,7 +24,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-
 // GET: /api/devices
 app.MapGet("/api/devices", async (DeviceContext db) =>
 {
@@ -44,9 +44,8 @@ app.MapGet("/api/devices/{id}", async (int id, DeviceContext db) =>
     var device = await db.Devices
         .Include(d => d.DeviceType)
         .Include(d => d.DeviceEmployees)
-        .ThenInclude(de => de.Employee)
-        .ThenInclude(e => e.Person).Include(device => device.DeviceEmployees)
-        .ThenInclude(deviceEmployee => deviceEmployee.Employee).ThenInclude(employee => employee.Person)
+            .ThenInclude(de => de.Employee)
+                .ThenInclude(e => e.Person)
         .FirstOrDefaultAsync(d => d.Id == id);
 
     if (device == null)
@@ -64,9 +63,10 @@ app.MapGet("/api/devices/{id}", async (int id, DeviceContext db) =>
 
     var details = new DeviceInfoDto
     {
-        DeviceType = device.DeviceType?.Name ?? "Unknown",
+        Name = device.Name,
+        DeviceTypeName = device.DeviceType?.Name ?? "Unknown",
         IsEnabled = device.IsEnabled,
-        AdditionalProperties = System.Text.Json.JsonDocument.Parse(device.AdditionalProperties).RootElement,
+        AdditionalProperties = JsonSerializer.Deserialize<Dictionary<string, object>>(device.AdditionalProperties) ?? new(),
         CurrentEmployee = employee
     };
 
@@ -76,18 +76,16 @@ app.MapGet("/api/devices/{id}", async (int id, DeviceContext db) =>
 // POST: /api/devices
 app.MapPost("/api/devices", async (DeviceContext db, CreateUpdateDeviceDto dto) =>
 {
-    var deviceType = await db.DeviceTypes.FirstOrDefaultAsync(dt => dt.Name == dto.DeviceType);
+    var deviceType = await db.DeviceTypes.FirstOrDefaultAsync(dt => dt.Name == dto.DeviceTypeName);
     if (deviceType == null)
         return Results.BadRequest("Invalid device type.");
 
-    var additionalJson = dto.AdditionalProperties.ToString() ?? "{}";
-
     var device = new Device
     {
-        Name = $"New {dto.DeviceType}",
+        Name = dto.Name,
         IsEnabled = dto.IsEnabled,
         DeviceTypeId = deviceType.Id,
-        AdditionalProperties = additionalJson
+        AdditionalProperties = JsonSerializer.Serialize(dto.AdditionalProperties)
     };
 
     db.Devices.Add(device);
@@ -103,13 +101,14 @@ app.MapPut("/api/devices/{id}", async (int id, DeviceContext db, CreateUpdateDev
     if (device == null)
         return Results.NotFound("Device not found.");
 
-    var deviceType = await db.DeviceTypes.FirstOrDefaultAsync(dt => dt.Name == dto.DeviceType);
+    var deviceType = await db.DeviceTypes.FirstOrDefaultAsync(dt => dt.Name == dto.DeviceTypeName);
     if (deviceType == null)
         return Results.BadRequest("Invalid device type.");
 
+    device.Name = dto.Name;
     device.IsEnabled = dto.IsEnabled;
     device.DeviceTypeId = deviceType.Id;
-    device.AdditionalProperties = dto.AdditionalProperties.ToString() ?? "{}";
+    device.AdditionalProperties = JsonSerializer.Serialize(dto.AdditionalProperties);
 
     await db.SaveChangesAsync();
     return Results.NoContent();
@@ -134,8 +133,6 @@ app.MapDelete("/api/devices/{id}", async (int id, DeviceContext db) =>
     return Results.NoContent();
 });
 
-
-
 // GET: /api/employees
 app.MapGet("/api/employees", async (DeviceContext db) =>
 {
@@ -153,7 +150,6 @@ app.MapGet("/api/employees", async (DeviceContext db) =>
 
 // GET: /api/employees/{id}
 app.MapGet("/api/employees/{id}", async (int id, DeviceContext db) =>
-
 {
     var employee = await db.Employees
         .Include(e => e.Person)
@@ -162,7 +158,6 @@ app.MapGet("/api/employees/{id}", async (int id, DeviceContext db) =>
 
     if (employee == null)
         return Results.NotFound("Employee not found.");
-    
 
     var dto = new EmployeeDetailsDto
     {

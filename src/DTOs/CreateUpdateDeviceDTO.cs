@@ -5,10 +5,14 @@ namespace DTOs;
 public class CreateUpdateDeviceDto
 {
     [Required]
-    public string DeviceType { get; set; } = null!;
+    public string DeviceTypeName { get; set; } = null!;
+
+    [Required]
+    public string Name { get; set; } = null!;
 
     public bool IsEnabled { get; set; }
 
     [Required]
     public object AdditionalProperties { get; set; } = null!;
 }
+
