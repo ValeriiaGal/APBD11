@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DTOs", "src\DTOs\DTOs.cspro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "src\Models\Models.csproj", "{A82EABD0-F521-4D82-9B26-1C1AD06C691D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tokens", "src\Tokens\Tokens.csproj", "{ADF88CB4-B301-448E-B0F6-10C0B0D4314A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{A82EABD0-F521-4D82-9B26-1C1AD06C691D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A82EABD0-F521-4D82-9B26-1C1AD06C691D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A82EABD0-F521-4D82-9B26-1C1AD06C691D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADF88CB4-B301-448E-B0F6-10C0B0D4314A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADF88CB4-B301-448E-B0F6-10C0B0D4314A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADF88CB4-B301-448E-B0F6-10C0B0D4314A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADF88CB4-B301-448E-B0F6-10C0B0D4314A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

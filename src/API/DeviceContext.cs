@@ -16,21 +16,19 @@ public partial class DeviceContext : DbContext
     }
 
     public virtual DbSet<Device> Devices { get; set; }
-
     public virtual DbSet<DeviceEmployee> DeviceEmployees { get; set; }
-
     public virtual DbSet<DeviceType> DeviceTypes { get; set; }
-
     public virtual DbSet<Employee> Employees { get; set; }
-
     public virtual DbSet<Person> People { get; set; }
-
     public virtual DbSet<Position> Positions { get; set; }
-    
+
+    // 👇 Add these:
+    public virtual DbSet<Account> Accounts { get; set; }
+    public virtual DbSet<Role> Roles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-      //  modelBuilder.HasDefaultSchema("s30854");
+        // modelBuilder.HasDefaultSchema("s30854");
 
         modelBuilder.Entity<Device>(entity =>
         {
@@ -101,29 +99,15 @@ public partial class DeviceContext : DbContext
             entity.ToTable("Person");
 
             entity.HasIndex(e => e.PassportNumber, "UQ__Person__45809E71952159A7").IsUnique();
-
             entity.HasIndex(e => e.PhoneNumber, "UQ__Person__85FB4E3894F9A8AD").IsUnique();
-
             entity.HasIndex(e => e.Email, "UQ__Person__A9D105347F1710D9").IsUnique();
 
-            entity.Property(e => e.Email)
-                .HasMaxLength(150)
-                .IsUnicode(false);
-            entity.Property(e => e.FirstName)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.LastName)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.MiddleName)
-                .HasMaxLength(100)
-                .IsUnicode(false);
-            entity.Property(e => e.PassportNumber)
-                .HasMaxLength(30)
-                .IsUnicode(false);
-            entity.Property(e => e.PhoneNumber)
-                .HasMaxLength(20)
-                .IsUnicode(false);
+            entity.Property(e => e.Email).HasMaxLength(150).IsUnicode(false);
+            entity.Property(e => e.FirstName).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.LastName).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.MiddleName).HasMaxLength(100).IsUnicode(false);
+            entity.Property(e => e.PassportNumber).HasMaxLength(30).IsUnicode(false);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20).IsUnicode(false);
         });
 
         modelBuilder.Entity<Position>(entity =>
@@ -132,9 +116,43 @@ public partial class DeviceContext : DbContext
 
             entity.HasIndex(e => e.Name, "UQ__Position__737584F6D2FC835A").IsUnique();
 
-            entity.Property(e => e.Name)
-                .HasMaxLength(100)
+            entity.Property(e => e.Name).HasMaxLength(100).IsUnicode(false);
+        });
+
+        // 👇 Role table config
+        modelBuilder.Entity<Role>(entity =>
+        {
+            entity.ToTable("Role");
+
+            entity.HasIndex(r => r.Name).IsUnique();
+            entity.Property(r => r.Name)
+                .HasMaxLength(50)
                 .IsUnicode(false);
+
+            entity.HasData(
+                new Role { Id = 1, Name = "Admin" },
+                new Role { Id = 2, Name = "User" }
+            );
+        });
+
+        // 👇 Account table config
+        modelBuilder.Entity<Account>(entity =>
+        {
+            entity.ToTable("Account");
+
+            entity.HasIndex(a => a.Username).IsUnique();
+            entity.Property(a => a.Username).HasMaxLength(100).IsUnicode(false);
+            entity.Property(a => a.PasswordHash).HasMaxLength(255).IsUnicode(false);
+
+            entity.HasOne(a => a.Role)
+                .WithMany(r => r.Accounts)
+                .HasForeignKey(a => a.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(a => a.Employee)
+                .WithMany()
+                .HasForeignKey(a => a.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         OnModelCreatingPartial(modelBuilder);

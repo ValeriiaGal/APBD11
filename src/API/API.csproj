@@ -7,6 +7,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.16" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.13"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.16">
           <PrivateAssets>all</PrivateAssets>
@@ -17,8 +18,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Models\Models.csproj" />
       <ProjectReference Include="..\DTOs\DTOs.csproj" />
+      <ProjectReference Include="..\Tokens\Tokens.csproj" />
+        <ProjectReference Include="..\Models\Models.csproj" />
     </ItemGroup>
     
 
