@@ -40,3 +40,13 @@ INSERT INTO DeviceEmployee (DeviceId, EmployeeId, IssueDate, ReturnDate) VALUES
                                                                              (3, 3, '2022-08-05', NULL),
                                                                              (4, 4, '2023-11-01', NULL),
                                                                              (5, 5, '2021-05-25', '2023-05-25');
+
+
+INSERT INTO Person ( FirstName, LastName, PassportNumber, PhoneNumber, Email)
+VALUES ( 'Test', 'Admin', 'AA1234567', '+48123456789', 'admin@test.com');
+
+INSERT INTO Position ( Name, MinExpYears)
+VALUES ( 'Administrator', 0);
+
+INSERT INTO Employee ( Salary, PositionId, PersonId, HireDate)
+VALUES ( 10000.00, 1, 1, GETUTCDATE());

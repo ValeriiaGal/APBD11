@@ -32,7 +32,7 @@ public class AccountController : ControllerBase
             && Regex.IsMatch(password, "[!@#$%^&*(),.?\":{}|<>]");
     }
 
-    // POST: /api/accounts
+    // POST: /api/account
     [HttpPost]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)

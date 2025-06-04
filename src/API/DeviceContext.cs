@@ -21,8 +21,7 @@ public partial class DeviceContext : DbContext
     public virtual DbSet<Employee> Employees { get; set; }
     public virtual DbSet<Person> People { get; set; }
     public virtual DbSet<Position> Positions { get; set; }
-
-    // 👇 Add these:
+    
     public virtual DbSet<Account> Accounts { get; set; }
     public virtual DbSet<Role> Roles { get; set; }
 
@@ -118,8 +117,7 @@ public partial class DeviceContext : DbContext
 
             entity.Property(e => e.Name).HasMaxLength(100).IsUnicode(false);
         });
-
-        // 👇 Role table config
+        
         modelBuilder.Entity<Role>(entity =>
         {
             entity.ToTable("Role");
@@ -134,8 +132,7 @@ public partial class DeviceContext : DbContext
                 new Role { Id = 2, Name = "User" }
             );
         });
-
-        // 👇 Account table config
+        
         modelBuilder.Entity<Account>(entity =>
         {
             entity.ToTable("Account");
