@@ -17,5 +17,5 @@ public class RegisterDto
     public int EmployeeId { get; set; }
 
     [Required]
-    public string Role { get; set; } = null!; // "Admin" or "User"
+    public string Role { get; set; } = null!; 
 }
