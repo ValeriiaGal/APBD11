@@ -1,13 +1,15 @@
 ﻿using API;
 using DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using System.Text.Json;
 
 namespace Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/device")]
 public class DeviceController : ControllerBase
 {
     private readonly DeviceContext _db;
@@ -15,6 +17,7 @@ public class DeviceController : ControllerBase
     public DeviceController(DeviceContext db) => _db = db;
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetDevices()
     {
         var devices = await _db.Devices
@@ -25,6 +28,7 @@ public class DeviceController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> GetDevice(int id)
     {
         var device = await _db.Devices
@@ -36,6 +40,15 @@ public class DeviceController : ControllerBase
 
         if (device == null)
             return NotFound("Device not found.");
+        
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role == "User")
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var account = await _db.Accounts.FindAsync(userId);
+            if (account == null || !device.DeviceEmployees.Any(de => de.EmployeeId == account.EmployeeId && de.ReturnDate == null))
+                return Forbid();
+        }
 
         var employee = device.DeviceEmployees
             .Where(de => de.ReturnDate == null)
@@ -60,6 +73,7 @@ public class DeviceController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> CreateDevice([FromBody] CreateUpdateDeviceDto dto)
     {
         var deviceType = await _db.DeviceTypes.FirstOrDefaultAsync(dt => dt.Name == dto.DeviceTypeName);
@@ -77,15 +91,28 @@ public class DeviceController : ControllerBase
         _db.Devices.Add(device);
         await _db.SaveChangesAsync();
 
-        return Created($"/api/devices/{device.Id}", new { device.Id });
+        return Created($"/api/device/{device.Id}", new { device.Id });
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,User")]
     public async Task<IActionResult> UpdateDevice(int id, [FromBody] CreateUpdateDeviceDto dto)
     {
-        var device = await _db.Devices.FindAsync(id);
+        var device = await _db.Devices
+            .Include(d => d.DeviceEmployees)
+            .FirstOrDefaultAsync(d => d.Id == id);
+
         if (device == null)
             return NotFound("Device not found.");
+
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role == "User")
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var account = await _db.Accounts.FindAsync(userId);
+            if (account == null || !device.DeviceEmployees.Any(de => de.EmployeeId == account.EmployeeId && de.ReturnDate == null))
+                return Forbid();
+        }
 
         var deviceType = await _db.DeviceTypes.FirstOrDefaultAsync(dt => dt.Name == dto.DeviceTypeName);
         if (deviceType == null)
@@ -101,6 +128,7 @@ public class DeviceController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteDevice(int id)
     {
         var device = await _db.Devices

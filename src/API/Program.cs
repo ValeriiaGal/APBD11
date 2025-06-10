@@ -1,4 +1,4 @@
-// Program.cs
+
 using API;
 using DTOs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;

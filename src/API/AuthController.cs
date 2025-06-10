@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using Tokens;
 
 namespace Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth")]
 public class AuthController : ControllerBase
 {
     private readonly DeviceContext _db;
@@ -24,19 +26,27 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost]
+    [Route("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto)
     {
-        var account = await _db.Accounts.Include(a => a.Role)
-            .FirstOrDefaultAsync(a => a.Username == dto.Username);
+        try
+        {
+            var account = await _db.Accounts.Include(a => a.Role)
+                .FirstOrDefaultAsync(a => a.Username == dto.Username);
 
-        if (account == null)
-            return Unauthorized("Invalid credentials.");
+            if (account == null)
+                return Unauthorized("Invalid credentials.");
 
-        var result = _passwordHasher.VerifyHashedPassword(account, account.PasswordHash, dto.Password);
-        if (result != PasswordVerificationResult.Success)
-            return Unauthorized("Invalid credentials.");
+            var result = _passwordHasher.VerifyHashedPassword(account, account.PasswordHash, dto.Password);
+            if (result != PasswordVerificationResult.Success)
+                return Unauthorized("Invalid credentials.");
 
-        var token = _tokenService.GenerateToken(account);
-        return Ok(new { token });
+            var token = _tokenService.GenerateToken(account);
+            return Ok(new { token });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 }
