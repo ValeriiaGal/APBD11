@@ -8,7 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Tokens;
 using Microsoft.AspNetCore.Identity;
-
+using Middleware;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,5 +51,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.UseMiddleware<ValidationMiddleware>();
+
 
 app.Run();
