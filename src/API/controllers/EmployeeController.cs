@@ -3,6 +3,7 @@ using DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -13,13 +14,19 @@ namespace Controllers;
 public class EmployeeController : ControllerBase
 {
     private readonly DeviceContext _db;
+    private readonly ILogger<EmployeeController> _logger;
 
-    public EmployeeController(DeviceContext db) => _db = db;
+    public EmployeeController(DeviceContext db, ILogger<EmployeeController> logger)
+    {
+        _db = db;
+        _logger = logger;
+    }
 
     [HttpGet]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAllEmployees()
     {
+        _logger.LogInformation("Fetching all employees...");
         try
         {
             var employees = await _db.Employees
@@ -31,10 +38,12 @@ public class EmployeeController : ControllerBase
                 })
                 .ToListAsync();
 
+            _logger.LogInformation("Successfully fetched {Count} employees.", employees.Count);
             return Ok(employees);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while fetching employees.");
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
@@ -43,6 +52,7 @@ public class EmployeeController : ControllerBase
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetEmployeeDetails(int id)
     {
+        _logger.LogInformation("Fetching employee details for ID: {Id}", id);
         try
         {
             var employee = await _db.Employees
@@ -51,7 +61,10 @@ public class EmployeeController : ControllerBase
                 .FirstOrDefaultAsync(e => e.Id == id);
 
             if (employee == null)
+            {
+                _logger.LogWarning("Employee with ID {Id} not found.", id);
                 return NotFound("Employee not found.");
+            }
 
             var dto = new EmployeeDetailsDto
             {
@@ -70,10 +83,12 @@ public class EmployeeController : ControllerBase
                 }
             };
 
+            _logger.LogInformation("Successfully fetched details for employee ID {Id}.", id);
             return Ok(dto);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error occurred while fetching employee ID {Id}.", id);
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }

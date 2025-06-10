@@ -4,22 +4,27 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using Tokens;
 
 namespace Controllers;
 
 [ApiController]
 [Route("api/account")]
-
 public class AccountController : ControllerBase
 {
     private readonly DeviceContext _db;
     private readonly IPasswordHasher<Account> _passwordHasher;
+    private readonly ILogger<AccountController> _logger;
 
-    public AccountController(DeviceContext db, IPasswordHasher<Account> passwordHasher)
+    public AccountController(DeviceContext db, IPasswordHasher<Account> passwordHasher, ILogger<AccountController> logger)
     {
         _db = db;
         _passwordHasher = passwordHasher;
+        _logger = logger;
     }
 
     private bool IsValidUsername(string username) => !string.IsNullOrWhiteSpace(username) && !char.IsDigit(username[0]);
@@ -33,8 +38,6 @@ public class AccountController : ControllerBase
                && Regex.IsMatch(password, "[!@#$%^&*(),.?\":{}|<>]");
     }
 
-
-
     [HttpPost]
     [Authorize(Roles = "Admin")]
     [Route("register")]
@@ -42,6 +45,8 @@ public class AccountController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Starting account registration");
+
             if (!IsValidUsername(dto.Username))
                 return BadRequest("Username cannot start with a digit.");
             if (!IsValidPassword(dto.Password))
@@ -67,10 +72,13 @@ public class AccountController : ControllerBase
 
             _db.Accounts.Add(account);
             await _db.SaveChangesAsync();
+
+            _logger.LogInformation("Account registered successfully with ID {Id}", account.Id);
             return Created($"/api/account/{account.Id}", new { account.Id });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error during account registration");
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
@@ -81,6 +89,7 @@ public class AccountController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Fetching all accounts");
             var accounts = await _db.Accounts
                 .Select(a => new { a.Id, a.Username, a.PasswordHash })
                 .ToListAsync();
@@ -88,6 +97,7 @@ public class AccountController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error fetching accounts");
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
@@ -98,12 +108,14 @@ public class AccountController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Fetching account with ID {Id}", id);
             var acc = await _db.Accounts.FindAsync(id);
             if (acc == null) return NotFound();
             return Ok(new { acc.Username, acc.PasswordHash });
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error fetching account with ID {Id}", id);
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
@@ -114,6 +126,7 @@ public class AccountController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Updating account with ID {Id}", id);
             var acc = await _db.Accounts.FindAsync(id);
             if (acc == null) return NotFound();
 
@@ -124,6 +137,7 @@ public class AccountController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error updating account with ID {Id}", id);
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
@@ -134,6 +148,7 @@ public class AccountController : ControllerBase
     {
         try
         {
+            _logger.LogInformation("Deleting account with ID {Id}", id);
             var acc = await _db.Accounts.FindAsync(id);
             if (acc == null) return NotFound();
 
@@ -143,8 +158,8 @@ public class AccountController : ControllerBase
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error deleting account with ID {Id}", id);
             return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
 }
-
